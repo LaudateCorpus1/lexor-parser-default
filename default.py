@@ -1,0 +1,86 @@
+"""LEXOR: DEFAULT Parsing Style
+
+This parser attempts to combine the best features of Markdown and
+LaTeX. This is all in taste and preferences of the author.
+
+"""
+
+from lexor import init, load_aux
+
+INFO = init(
+    version=(0, 0, 1, 'rc', 0),
+    lang='lexor',
+    type='parser',
+    description='Parse Markdown and LaTeX elements. ',
+    url='http://jmlopez-rod.github.io/lexor-lang/lexor-parser-default',
+    author='Manuel Lopez',
+    author_email='jmlopez.rod@gmail.com',
+    license='BSD License',
+    path=__file__
+)
+MOD = load_aux(INFO)
+REPOSITORY = [
+    MOD['auto'].AutoLinkNP,
+    MOD['auto'].AutoMailNP,
+    MOD['cdata'].CDataNP,
+    MOD['comment'].CommentNP,
+    MOD['code'].CodeInlineNP,
+    MOD['doctype'].DocumentTypeNP,
+    MOD['element'].ElementNP,
+    MOD['empty'].EmptyNP,
+    MOD['entity'].EntityNP,
+    MOD['entity'].BreakNP,
+    MOD['header'].AtxHeaderNP,
+    MOD['header'].SetextHeaderNP,
+    MOD['inline'].StrongEmNP,
+    MOD['inline'].EmStrongNP,
+    MOD['inline'].StrongNP,
+    MOD['inline'].Strong2NP,
+    MOD['inline'].EmNP,
+    MOD['inline'].SmartEmNP,
+    MOD['paragraph'].ParagraphNP,
+    MOD['pi'].ProcessingInstructionNP,
+]
+MAPPING = {
+    '__default__': (
+        '<&\\\\`\'\"*_{}[\\]()#+-.!%$\n', [
+            'CodeInlineNP',
+            #'ReferenceInlineNP',
+            #'MathJaxBlockNP',
+            #'MathJaxInlineNP',
+            'StrongEmNP',
+            'EmStrongNP',
+            'StrongNP',
+            'Strong2NP',
+            'EmNP',
+            'SmartEmNP',
+            'BreakNP',
+            'AutoMailNP',
+            'AutoLinkNP',
+            'ElementNP',
+            'CDataNP',
+            'DocumentTypeNP',
+            'CommentNP',
+            'ProcessingInstructionNP',
+            'EntityNP',
+        ]
+    ),
+    '#document': (
+        '\n', [
+            'EmptyNP',
+            #ReferenceBlockNP,
+            #CodeBlockNP,
+            'AtxHeaderNP',
+            'SetextHeaderNP',
+            #MathJaxBlockNP,
+            'BreakNP',
+            'CDataNP',
+            'DocumentTypeNP',
+            'CommentNP',
+            'ProcessingInstructionNP',
+            'ParagraphNP',
+            'ElementNP',
+        ]
+    ),
+    'body': '#document',
+}
