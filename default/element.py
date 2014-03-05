@@ -441,13 +441,13 @@ class ElementNP(NodeParser):
                 node[prop] = val
         parser.update(end+skip)
 
-    def get_attribute_list(self, parser, node):
+    def get_attribute_list(self, parser, node, start='{', end='}'):
         """Attempts to get the attribute list at the current position
         where the parser is reading. """
         caret = parser.caret
-        if parser.text[caret:caret+1] != '{':
+        if parser.text[caret:caret+1] != start:
             return None
-        index = parser.text.find('}', caret, parser.end)
+        index = parser.text.find(end, caret, parser.end)
         if index == -1:
             return None
         parser.update(parser.caret+1)

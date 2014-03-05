@@ -67,6 +67,12 @@ class ParagraphNP(NodeParser):
             if match.end(0)-caret > 1 or match.end(0) == parser.end:
                 parser.update(match.end(0)-1)
                 return parser.copy_pos()
+        if node.parent.name == 'list_item':
+            if (parser.text[caret+1:caret+3] == '%%' or (
+                    node.index == 0 and
+                    parser.text[caret+1:caret+2] in '^+*')):
+                node['remove'] = 'true'
+                return parser.copy_pos()
         return None
 
 MSG = {

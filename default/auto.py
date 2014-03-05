@@ -54,7 +54,7 @@ class AutoLinkNP(NodeParser):
         index = parser.text.find('>', begin, end)
         if index == -1:
             return None
-        match = URL_RE.search(parser.text[begin+1:index])
+        match = URL_RE.match(parser.text[begin+1:index])
         if not match:
             return None
         return index
