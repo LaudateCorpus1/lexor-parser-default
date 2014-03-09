@@ -8,7 +8,7 @@ LaTeX. This is all in taste and preferences of the author.
 from lexor import init, load_aux
 
 INFO = init(
-    version=(0, 0, 1, 'rc', 1),
+    version=(0, 0, 1, 'rc', 2),
     lang='lexor',
     type='parser',
     description='Parse Markdown and LaTeX elements. ',
@@ -38,17 +38,21 @@ REPOSITORY = [
     MOD['inline'].Strong2NP,
     MOD['inline'].EmNP,
     MOD['inline'].SmartEmNP,
+    MOD['latex'].LatexDisplayNP,
+    MOD['latex'].LatexInlineNP,
     MOD['list'].ListNP,
     MOD['paragraph'].ParagraphNP,
     MOD['pi'].ProcessingInstructionNP,
+    MOD['reference'].ReferenceBlockNP,
+    MOD['reference'].ReferenceInlineNP,
 ]
 MAPPING = {
     '__default__': (
         '<&\\\\`\'\"*_{}[\\]()#+-.!%$\n', [
             'CodeInlineNP',
-            #'ReferenceInlineNP',
-            #'MathJaxBlockNP',
-            #'MathJaxInlineNP',
+            'ReferenceInlineNP',
+            'LatexDisplayNP',
+            'LatexInlineNP',
             'StrongEmNP',
             'EmStrongNP',
             'StrongNP',
@@ -69,11 +73,11 @@ MAPPING = {
     '#document': (
         '\n', [
             'EmptyNP',
-            #ReferenceBlockNP,
+            'ReferenceBlockNP',
             #CodeBlockNP,
             'AtxHeaderNP',
             'SetextHeaderNP',
-            #MathJaxBlockNP,
+            'LatexDisplayNP',
             'BreakNP',
             'CDataNP',
             'DocumentTypeNP',
@@ -90,4 +94,11 @@ MAPPING = {
         ]
     ),
     'list_item': '#document',
+    'align': ('%', []),
+    'equation': ('%', []),
+    'define': (
+        '\n', [
+            MOD['define'].MacroNP,
+        ]
+    ),
 }

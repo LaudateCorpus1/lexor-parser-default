@@ -15,8 +15,10 @@ class EmptyNP(NodeParser):
         """Moves the parser to the first nonspace character and
         returns the index where this happends."""
         index = parser.caret
-        while parser.text[index:index+1] in space:
+        char = parser.text[index:index+1]
+        while char and char in space:
             index += 1
+            char = parser.text[index:index+1]
         parser.update(index)
         return index
 
