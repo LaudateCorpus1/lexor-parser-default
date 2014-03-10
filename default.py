@@ -8,7 +8,7 @@ LaTeX. This is all in taste and preferences of the author.
 from lexor import init, load_aux
 
 INFO = init(
-    version=(0, 0, 1, 'rc', 2),
+    version=(0, 0, 1, 'rc', 3),
     lang='lexor',
     type='parser',
     description='Parse Markdown and LaTeX elements. ',
@@ -43,6 +43,7 @@ REPOSITORY = [
     MOD['list'].ListNP,
     MOD['paragraph'].ParagraphNP,
     MOD['pi'].ProcessingInstructionNP,
+    MOD['quote'].QuoteNP,
     MOD['reference'].ReferenceBlockNP,
     MOD['reference'].ReferenceInlineNP,
 ]
@@ -59,6 +60,7 @@ MAPPING = {
             'Strong2NP',
             'EmNP',
             'SmartEmNP',
+            'QuoteNP',
             'BreakNP',
             'AutoMailNP',
             'AutoLinkNP',
