@@ -8,7 +8,7 @@ LaTeX. This is all in taste and preferences of the author.
 from lexor import init, load_aux
 
 INFO = init(
-    version=(0, 0, 1, 'rc', 3),
+    version=(0, 0, 1, 'rc', 4),
     lang='lexor',
     type='parser',
     description='Parse Markdown and LaTeX elements. ',

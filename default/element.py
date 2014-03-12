@@ -23,10 +23,11 @@ RE_NEXT = re.compile(r'.*?[ \t\n\r\f\v/>=]')
 VOID_ELEMENT = (
     'area', 'base', 'basefont', 'br', 'col', 'frame', 'hr', 'img',
     'input', 'isindex', 'link', 'meta', 'param', 'command', 'embed',
-    'keygen', 'source', 'track', 'wbr', 'include'
+    'keygen', 'source', 'track', 'wbr', 'include', 'documentclass',
+    'bibliography',
 )
 RAWTEXT_ELEMENT = (
-    'script', 'style', 'textarea', 'title', 'undef'
+    'script', 'style', 'textarea', 'title', 'undef', 'usepackage',
 )
 AUTO_CLOSE = {
     'p': [

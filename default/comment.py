@@ -21,6 +21,11 @@ class CommentNP(NodeParser):
     def _regular_comment(self, parser, caret):
         """Parse regular comments. """
         if parser.text[caret+2:caret+4] != '--':
+            index = parser.text.find('!>', caret+2)
+            if index != -1:
+                parser.update(index+2)
+                content = replace(parser.text[caret+2:index], ('--', '- '))
+                return Comment(content)
             index = parser.text.find('>', caret+2)
             if index == -1:
                 self.msg('E100', parser.pos)
