@@ -68,7 +68,8 @@ class ParagraphNP(NodeParser):
                 parser.update(match.end(0)-1)
                 return parser.copy_pos()
         if node.parent.name == 'list_item':
-            if (parser.text[caret+1:caret+3] == '%%' or (
+            if (parser.text[caret+1:caret+3] == '%%' or
+                    parser.text[caret+1:caret+8] == '</list>' or (
                     node.index == 0 and
                     parser.text[caret+1:caret+2] in '^+*')):
                 node['remove'] = 'true'

@@ -165,7 +165,7 @@ class ElementNP(NodeParser):
         the node is not yet done and that further checks need to be
         performed. """
         flag = None
-        if node.type == 1:
+        if node.type__ == 1:
             if parser.text[caret:caret+1] != '<':
                 pass
             elif parser.text[caret+1:caret+2] == '/':
@@ -179,7 +179,7 @@ class ElementNP(NodeParser):
                     return pos
             else:
                 flag = self.is_element(parser)
-        elif node.type == 3:
+        elif node.type__ == 3:
             if parser.text[caret:caret+3] in ['%%?', '%%!']:
                 return None
             flag = self.is_element(parser)
@@ -228,7 +228,7 @@ class ElementNP(NodeParser):
             node.data = self.get_raw_text(parser, tagname, pos, shift)
             return [node]
         node.pos = pos
-        node.type = shift
+        node.type__ = shift
         return node
 
     def close(self, node):
@@ -237,18 +237,18 @@ class ElementNP(NodeParser):
         caret = parser.caret
         done = self.is_done(node, parser, caret)
         if isinstance(done, list):
-            del node.type
+            del node.type__
             return done
         if done is None:
             return done
         # http://www.whatwg.org/specs/web-apps/current-work/#optional-tags
-        match = RE.search(parser.text, caret+node.type)
+        match = RE.search(parser.text, caret+node.type__)
         if parser.text[parser.caret] == '<':
             tmptag = parser.text[parser.caret+1:match.end(0)-1].lower()
         else:
             tmptag = parser.text[parser.caret+3:match.end(0)-1].lower()
         if node.name in AUTO_CLOSE and tmptag in AUTO_CLOSE[node.name]:
-            del node.type
+            del node.type__
             return parser.copy_pos()
         if node.name in AUTO_CLOSE_FIRST:
             has_element = False
@@ -257,7 +257,7 @@ class ElementNP(NodeParser):
                     has_element = True
                     break
             if has_element is False and tmptag in AUTO_CLOSE_FIRST[node.name]:
-                del node.type
+                del node.type__
                 return parser.copy_pos()
         return None
 

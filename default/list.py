@@ -72,12 +72,22 @@ class ListNP(NodeParser):
             parser.update(parser.caret+1)
         return node
 
-    def close(self, _):
+    def close(self, node):
         parser = self.parser
         caret = parser.caret
         if parser.text[caret:caret+3] == '\n%%':
             pos = parser.copy_pos()
             parser.update(caret+1)
-            return pos
-        if parser.text[caret] == '\n' and parser.text[caret+1] in '*+^':
-            return parser.copy_pos()
+        elif parser.text[caret] == '\n' and parser.text[caret+1] in '*+^':
+            pos = parser.copy_pos()
+        elif parser.text[caret:caret+8] == "\n</list>":
+            pos = parser.copy_pos()
+            parser.update(caret+1)
+        else:
+            return None
+        # Pass the attributes to the opening list
+        if node.index == 0:
+            for att in node.parent.attributes:
+                node['__'+att] = node.parent[att]
+                del node.parent[att]
+        return pos

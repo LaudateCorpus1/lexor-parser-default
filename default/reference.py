@@ -283,6 +283,7 @@ class ReferenceInlineNP(NodeParser):
             parser['ElementNP'].get_attribute_list(parser, node)
             return node
         node = Element('reference')
+        node.pos = parser.copy_pos()
         node['_pos'] = parser.copy_pos()
         node.ref_end = ref_end
         parser.update(parser.caret+1)

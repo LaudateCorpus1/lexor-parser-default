@@ -15,7 +15,7 @@ RE = re.compile('.*?[ \t\n\r\f\v;]')
 class EntityNP(NodeParser):
     """Processes special characters. This parser should be called
     only after all the other processors have attempted to parse."""
-    escape = '<`*_[]()+-.!'
+    escape = '<`*_[]()+-.!:'
     tex = '\\{}$&#^_%~'
 
     @staticmethod

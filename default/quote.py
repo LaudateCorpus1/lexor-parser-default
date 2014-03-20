@@ -32,6 +32,7 @@ class QuoteNP(NodeParser):
                 index = parser.text.find(qchar, index+1)
             elif char not in EMPTY:
                 node = Element('quoted')
+                node.pos = parser.copy_pos()
                 node['char'] = qchar
                 node.end_pos = index
                 parser.update(parser.caret+1)
