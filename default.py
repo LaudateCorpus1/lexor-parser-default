@@ -8,7 +8,7 @@ LaTeX. This is all in taste and preferences of the author.
 from lexor import init, load_aux
 
 INFO = init(
-    version=(0, 0, 1, 'rc', 5),
+    version=(0, 0, 1, 'rc', 6),
     lang='lexor',
     type='parser',
     description='Parse Markdown and LaTeX elements. ',
@@ -25,6 +25,8 @@ REPOSITORY = [
     MOD['cdata'].CDataNP,
     MOD['comment'].CommentNP,
     MOD['code'].CodeInlineNP,
+    MOD['code'].CodeBlockNP,
+    MOD['define'].MacroNP,
     MOD['doctype'].DocumentTypeNP,
     MOD['element'].ElementNP,
     MOD['empty'].EmptyNP,
@@ -78,7 +80,7 @@ MAPPING = {
             'EmptyNP',
             'MetaNP',
             'ReferenceBlockNP',
-            #CodeBlockNP,
+            'CodeBlockNP',
             'AtxHeaderNP',
             'SetextHeaderNP',
             'LatexDisplayNP',
@@ -103,7 +105,8 @@ MAPPING = {
     'equation': ('%', []),
     'define': (
         '\n', [
-            MOD['define'].MacroNP,
+            'MacroNP',
         ]
     ),
+    'codeblock': ('<%', []),
 }
