@@ -10,6 +10,7 @@ LANG_RE = re.compile(r'''
     (?P<path>(?:/\w+)*[/ ])?        # Zero or 1 path
     (?P<lang>[\w+-]*)               # The language
     ''', re.VERBOSE)
+FENCED = re.compile(r'\n~{3,}[~]+[ ]*(\n|$)')
 
 
 class CodeInlineNP(NodeParser):
@@ -149,6 +150,11 @@ class CodeBlockNP(NodeParser):
     or the tab character. The block ends when the line does not start
     with 4 spaces or a tab character.
 
+    You may also start a code block by writing a sequence of three
+    `~` at the beginning of the line, in this way there no
+    indentation will be required. The block ends with a row of `~` at
+    least as long as the starting row.
+
     This returns a pre tag to work with Alex Gorbatchev's
     [SyntaxHighlighter](http://alexgorbatchev.com/SyntaxHighlighter)
 
@@ -159,8 +165,53 @@ class CodeBlockNP(NodeParser):
     Note that this does not replace the characters '<' and '&'. The
     writer must convert these characters in the output."""
 
+    def get_fenced_block(self, match):
+        """Parse a fenced block code. """
+        parser = self.parser
+        text = parser.text
+        total = text[match.start()+1:match.end()].count('~')
+        parser.update(match.end())
+        node = Element('codeblock')
+
+        index = parser.text.find('\n', parser.caret)
+        if index == -1:
+            index = parser.end
+        left_b = parser.text.find('{', parser.caret, index)
+        if left_b != -1:
+            line = parser.text[parser.caret:left_b]
+        else:
+            line = parser.text[parser.caret:index]
+
+        block = code_hilite(line, node)
+        if block:
+            append = block[0] + '\n'
+        else:
+            append = ''
+
+        if left_b != -1:
+            parser.update(left_b)
+            self.parser['ElementNP'].get_attribute_list(parser, node)
+            if text[parser.caret] == '\n':
+                parser.update(parser.caret+1)
+        else:
+            parser.update(index+1)
+
+        rfenced = re.compile(r'\n~{'+str(total-1)+',}[~]+[ ]*(\n|$)')
+        match = rfenced.search(text, parser.caret)
+        if not match:
+            self.msg('E200', parser.pos, [total])
+            node.append_child(append+text[parser.caret:])
+            parser.update(parser.end)
+            return [node]
+        node.append_child(append+text[parser.caret:match.start()])
+        parser.update(match.end())
+        return [node]
+
     def make_node(self):
         parser = self.parser
+        match = FENCED.match(parser.text, parser.caret-1)
+        if match:
+            return self.get_fenced_block(match)
         text = self.parser.text[parser.caret:parser.caret+4]
         if text != 4*' ' and text[0:1] != '\t':
             return None
@@ -174,10 +225,7 @@ class CodeBlockNP(NodeParser):
             line = parser.text[parser.caret:left_b]
         else:
             line = parser.text[parser.caret:index]
-        if line[0:4] == 4*' ':
-            line_one = line[4:]
-        elif line[0:1] == '\t':
-            line_one = line[1:]
+        line_one = line[1:] if line[0:1] == '\t' else line[4:]
 
         block = code_hilite(line_one, node)
 
@@ -206,6 +254,7 @@ class CodeBlockNP(NodeParser):
 MSG = {
     'E100': 'ambiguous inline code ends at {0}:{1:2}',
     'E101': 'no more backticks after {0}:{1:2} to match',
+    'E200': 'closing row of `{0}` or more `~` not found',
 }
 MSG_EXPLANATION = [
     """
@@ -234,5 +283,28 @@ MSG_EXPLANATION = [
 
     E101:
         This is a backtick: `````.
+""", """
+    - Fenced code blocks start with 4 or more `~`. To close it you
+      must end the block with at least the number of `~` of the
+      starting row.
+
+    Okay:
+        ~~~~
+        print 'hello'
+        ~~~~
+
+    Okay:
+        ~~~~~~~
+        ~~~~
+        print 'hello'
+        ~~~~
+        ~~~~~~~
+
+    E200:
+        ~~~~~~~
+        ~~~~
+        print 'hello'
+        ~~~~
+        ~~~~~~
 """,
 ]
