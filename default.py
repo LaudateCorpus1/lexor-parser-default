@@ -7,8 +7,11 @@ LaTeX. This is all in taste and preferences of the author.
 
 from lexor import init, load_aux
 
+DEFAULTS = {
+    'inline': 'off',
+}
 INFO = init(
-    version=(0, 0, 1, 'rc', 8),
+    version=(0, 0, 1, 'rc', 9),
     lang='lexor',
     type='parser',
     description='Parse Markdown and LaTeX elements. ',
@@ -112,3 +115,11 @@ MAPPING = {
     ),
     'codeblock': ('<%', []),
 }
+
+
+def parser_setup(parser):
+    """Using options to configure the parser. """
+    if parser.defaults['inline'] == 'on':
+        parser.style_module.MAPPING = {
+            '__default__': parser.style_module.MAPPING['__default__']
+        }
