@@ -15,9 +15,16 @@ INFO = init(
     lang='lexor',
     type='parser',
     description='Parse Markdown and LaTeX elements. ',
-    url='http://jmlopez-rod.github.io/lexor-lang/lexor-parser-default',
-    author='Manuel Lopez',
-    author_email='jmlopez.rod@gmail.com',
+    git={
+        'host': 'github',
+        'user': 'jmlopez-rod',
+        'repo': 'lexor-parser-default'
+    },
+    author={
+        'name': 'Manuel Lopez',
+        'email': 'jmlopez.rod@gmail.com'
+    },
+    docs='http://jmlopez-rod.github.io/lexor-lang/lexor-parser-default',
     license='BSD License',
     path=__file__
 )
