@@ -86,7 +86,7 @@ def code_hilite(line_one, node):
     shebang line contains a path (even a single /) then it is assumed
     to be a real shebang line and left alone. However, if no path is
     given (e.i.: #!python or :::python) then it is assumed to be a
-    mock shebang for language identifitation of a code fragment and
+    mock shebang for language identification of a code fragment and
     removed from the code block prior to processing for code
     highlighting. When a mock shebang (e.i: #!python) is found, line
     numbering is turned on. When colons are found in place of a
@@ -106,7 +106,7 @@ def code_hilite(line_one, node):
 
     #!/usr/bin/python first-line: 10; highlight: [2, 4, 6]
 
-    Everything after the first space will be appened to the class
+    Everything after the first space will be appended to the class
     attribute. For this reason there is no need to modify the
     attribute list which can be declared in the first line.
 
@@ -118,7 +118,7 @@ def code_hilite(line_one, node):
     :::{class="new"}
 
     Note that doing so will also result in lexor giving you a warning
-    since you overwriting an attribute which has already been
+    since you are overwriting an attribute which has already been
     declared.
 
     The function returns either an empty list or a list with the first
@@ -146,7 +146,7 @@ def code_hilite(line_one, node):
 
 
 class CodeBlockNP(NodeParser):
-    """A code block is a block that stars with a line with 4 spaces
+    """A code block is a block that starts with a line with 4 spaces
     or the tab character. The block ends when the line does not start
     with 4 spaces or a tab character.
 
