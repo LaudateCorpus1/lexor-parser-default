@@ -5,6 +5,7 @@
 import re
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Element, Text
+from lexor.util import Position
 LANG_RE = re.compile(r'''
     (?:(?:^::+)|(?P<shebang>^[#]!)) # Shebang or 2 or more colons.
     (?P<path>(?:/\w+)*[/ ])?        # Zero or 1 path
@@ -36,7 +37,8 @@ class CodeInlineNP(NodeParser):
         except IndexError:
             pass
         if ambiguous:
-            self.msg('E100', parser.pos, parser.compute(end_index))
+            pos = parser.compute(end_index)
+            self.msg('E100', parser.pos, [Position(pos)])
         parser.update(end_index+count)
         content = parser.text[index:end_index].strip()
         if not content:
@@ -65,14 +67,14 @@ class CodeInlineNP(NodeParser):
             end_index = parser.text.find('`'*count, index, parser.end)
             if end_index > 0:
                 pos = parser.compute(end_index)
-                self.msg('E100', parser.pos, pos)
+                self.msg('E100', parser.pos, [Position(pos)])
                 parser.update(end_index+count)
                 content = parser.text[start:end_index].strip()
                 return self.build_node(parser, content)
             count -= 1
             start -= 1
         pos = parser.compute(parser.caret+total)
-        self.msg('E101', parser.pos, pos)
+        self.msg('E101', parser.pos, [Position(pos)])
         parser.update(parser.caret+total)
         return Text('`'*(total))
 
@@ -252,8 +254,8 @@ class CodeBlockNP(NodeParser):
 
 
 MSG = {
-    'E100': 'ambiguous inline code ends at {0}:{1:2}',
-    'E101': 'no more backticks after {0}:{1:2} to match',
+    'E100': 'ambiguous inline code ends at {0}',
+    'E101': 'no more backticks after {0} to match',
     'E200': 'closing row of `{0}` or more `~` not found',
 }
 MSG_EXPLANATION = [

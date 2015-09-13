@@ -3,6 +3,7 @@
 """
 
 import re
+from lexor.util import Position
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Void, Element
 
@@ -226,7 +227,7 @@ class ReferenceInlineNP(NodeParser):
         """Assumes that the parser is positioned at ("""
         end_info = parser.text.find(")", parser.caret+1, parser.end)
         if end_info == -1:
-            self.msg('E103', node['_pos'], parser.copy_pos())
+            self.msg('E103', node['_pos'], [Position(parser.pos)])
             node.name = 'failed_%s' % node.name
             return
         parser.update(parser.caret+1)
@@ -310,7 +311,7 @@ MSG = {
     'E100': 'no newline at end of file',
     'E101': 'invalid link reference',
     'E102': 'possible reference title detected',
-    'E103': 'incomplete inline reference at {0}:{1:2}'
+    'E103': 'incomplete inline reference at {0}'
 }
 MSG_EXPLANATION = [
     """

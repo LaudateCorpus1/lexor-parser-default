@@ -14,6 +14,7 @@ If no tagname is given then it the name of the element defaults to
 """
 
 import re
+from lexor.util import Position
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Element, Void, RawText
 
@@ -116,7 +117,8 @@ class ElementNP(NodeParser):
                 return None
             start = parser.text.find('<', caret+1)
             if start != -1 and start < endindex:
-                self.msg('E100', parser.pos, parser.compute(start))
+                pos = parser.compute(start)
+                self.msg('E100', parser.pos, [Position(pos)])
                 return None
         else:
             return None
@@ -318,7 +320,8 @@ class ElementNP(NodeParser):
             quote = parser.text[val_index]
             index = parser.text.find(quote, val_index+1, end)
             if index == -1:
-                self.msg('E150', parser.pos, parser.compute(end))
+                pos = parser.compute(end)
+                self.msg('E150', parser.pos, [Position(pos)])
                 parser.update(end+1)
                 return parser.text[val_index+1:end]
             parser.update(index+1)
@@ -456,14 +459,14 @@ class ElementNP(NodeParser):
 
 
 MSG = {
-    'E100': 'element discarded due to `<` at {0}:{1:2}',
+    'E100': 'element discarded due to `<` at {0}',
     'E110': '`RawText` {0}{1} closing tag `{2}` not found',
     'E120': '`/` not immediately followed by `>`',
     'E121': 'self-closing syntax (`/>`) used in non-void element',
     'E130': 'no space between attributes',
     'E140': '`{0}` found in unquoted attribute value',
     'E141': '`/` found in unquoted attribute value',
-    'E150': 'assuming quoted attribute to close at {0}:{1:2}',
+    'E150': 'assuming quoted attribute to close at {0}',
     'E160': 'attribute name "{0}" has already been declared',
     'E170': '{0} cannot be empty',
     'E171': 'python references and element ids cannot be empty',

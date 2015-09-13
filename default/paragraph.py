@@ -7,6 +7,7 @@ Node parser description.
 import re
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Element
+from lexor.util import Position
 
 EMPTY_RE = re.compile(r'\s*\n')
 
@@ -58,7 +59,7 @@ class ParagraphNP(NodeParser):
         caret = parser.caret
         tmp = parser['ElementNP'].get_tagname(parser)
         if tmp is not None and tmp in INVALID_TAGS:
-            self.msg('E100', parser.pos, [node.pos[0], node.pos[1], tmp])
+            self.msg('E100', parser.pos, (Position(node.pos), tmp))
             return parser.copy_pos()
         if parser.text[caret] != '\n':
             return None
@@ -77,7 +78,7 @@ class ParagraphNP(NodeParser):
         return None
 
 MSG = {
-    'E100': 'paragraph at {0}:{1} closed due to opening tag `{2}`',
+    'E100': 'paragraph at {0} closed due to opening tag `{1}`',
 }
 MSG_EXPLANATION = [
     """
