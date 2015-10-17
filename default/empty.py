@@ -12,8 +12,8 @@ class EmptyNP(NodeParser):
 
     @staticmethod
     def skip_space(parser, space=' \t'):
-        """Moves the parser to the first nonspace character and
-        returns the index where this happends."""
+        """Moves the parser to the first non-space character and
+        returns the index where this happened."""
         index = parser.caret
         char = parser.text[index:index+1]
         while char and char in space:
@@ -26,7 +26,8 @@ class EmptyNP(NodeParser):
         parser = self.parser
         match = RE.match(parser.text, parser.caret)
         if match:
+            pos = parser.copy_pos()
             data = parser.text[parser.caret:match.end()]
             parser.update(match.end())
-            return Text(data)
+            return Text(data).set_position(*pos)
         return None

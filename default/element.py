@@ -12,15 +12,14 @@ If no tagname is given then it the name of the element defaults to
 `span`.
 
 """
-
 import re
 from lexor.util import Position
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Element, Void, RawText
 
-RE = re.compile(r'.*?[ \t\n\r\f\v/>}]')
+RE = re.compile(r'.*?[ \t\n\r\f/>}]')
 RE_NOSPACE = re.compile(r"\s*")
-RE_NEXT = re.compile(r'.*?[ \t\n\r\f\v/>=]')
+RE_NEXT = re.compile(r'.*?[ \t\n\r\f/>=]')
 VOID_ELEMENT = (
     'area', 'base', 'basefont', 'br', 'col', 'frame', 'hr', 'img',
     'input', 'isindex', 'link', 'meta', 'param', 'command', 'embed',
@@ -85,19 +84,21 @@ class ElementNP(NodeParser):
         %%{}%%
 
     The start tag is '%%{}' Inside the brackets we can put the
-    nametag and attributes. The tag ends when '%%' is encountered.
+    name tag and attributes. The tag ends when '%%' is encountered.
     Using this form allows also to put the old html tag format as
     well as the new one.
 
     The rules of HTML apply here. For instance if you write a "p" tag
     it and we encounter another "p" tag before its closing tag then
-    the first p tag will be closed."""
+    the first p tag will be closed.
+    """
 
     def is_element(self, parser):
         """Check to see if the parser's caret is positioned in an
         element and return the index where the opening tag ends and
         the number 1 (if element starts with '<') or 3 (if it starts
-        with '%%{'). """
+        with '%%{').
+        """
         caret = parser.caret
         search = False
         if parser.text[caret:caret+1] == '<':
@@ -112,21 +113,22 @@ class ElementNP(NodeParser):
             return None
         char = parser.text[caret+shift:caret+shift+1]
         if search or char.isalpha() or char in [":", "_"]:
-            endindex = parser.text.find(END_CHAR[shift], caret+shift)
-            if endindex == -1:
+            end_index = parser.text.find(END_CHAR[shift], caret+shift)
+            if end_index == -1:
                 return None
             start = parser.text.find('<', caret+1)
-            if start != -1 and start < endindex:
+            if start != -1 and start < end_index:
                 pos = parser.compute(start)
                 self.msg('E100', parser.pos, [Position(pos)])
                 return None
         else:
             return None
-        return [endindex, shift]
+        return [end_index, shift]
 
     def get_tagname(self, parser):
         """If the parser is positioned at an element it will return
-        the tagname, otherwise it returns None. """
+        the tagname, otherwise it returns None.
+        """
         caret = parser.caret
         tmp = self.is_element(parser)
         if tmp is None:
@@ -140,7 +142,8 @@ class ElementNP(NodeParser):
 
     def get_raw_text(self, parser, tagname, pos, shift):
         """Return the data content of the RawText object and update
-        the caret. """
+        the caret.
+        """
         if shift == 3:
             start, end = '%%{', '%%'
             index = parser.text.find('%%', parser.caret)
@@ -148,7 +151,8 @@ class ElementNP(NodeParser):
             start, end = '<', ('</%s>' % tagname)
             index = parser.text.find('<', parser.caret)
             while index != -1:
-                tmpstr = parser.text[index:index+len(tagname)+3].lower()
+                tmpstr = parser.text[index:index+len(tagname)+3]
+                tmpstr = tmpstr.lower()
                 if tmpstr == end:
                     break
                 index = parser.text.find('<', index+1)
@@ -165,7 +169,8 @@ class ElementNP(NodeParser):
         """Checks to see if the node should be closed. It returns one
         of 3 values: None, pos, False. The value of False means that
         the node is not yet done and that further checks need to be
-        performed. """
+        performed.
+        """
         flag = None
         if node.type__ == 1:
             if parser.text[caret:caret+1] != '<':
@@ -202,11 +207,12 @@ class ElementNP(NodeParser):
         tmp = self.is_element(parser)
         if tmp is None:
             return None
-        endindex = tmp[0]
+        end_index = tmp[0]
         shift = tmp[1]
         pos = parser.copy_pos()
         match = RE.search(parser.text, caret+shift)
-        tagname = parser.text[parser.caret+shift:match.end(0)-1].lower()
+        tagname = parser.text[parser.caret+shift:match.end(0)-1]
+        tagname = tagname.lower()
         if tagname == '' or tagname[0] in '.#!@':
             tagname = 'span'
             parser.update(caret+3)
@@ -221,15 +227,15 @@ class ElementNP(NodeParser):
         if parser.text[parser.caret] == END_CHAR[shift]:
             parser.update(parser.caret+1)
         elif parser.text[parser.caret] == '/':
-            parser.update(endindex+1)
+            parser.update(end_index+1)
         else:
-            self.read_attributes(parser, node, endindex)
+            self.read_attributes(parser, node, end_index)
+        node.set_position(*pos)
         if isinstance(node, Void):
             return [node]
         if isinstance(node, RawText):
             node.data = self.get_raw_text(parser, tagname, pos, shift)
             return [node]
-        node.pos = pos
         node.type__ = shift
         return node
 
@@ -238,7 +244,7 @@ class ElementNP(NodeParser):
         parser = self.parser
         caret = parser.caret
         done = self.is_done(node, parser, caret)
-        if isinstance(done, list):
+        if isinstance(done, tuple):
             del node.type__
             return done
         if done is None:
@@ -246,10 +252,12 @@ class ElementNP(NodeParser):
         # http://www.whatwg.org/specs/web-apps/current-work/#optional-tags
         match = RE.search(parser.text, caret+node.type__)
         if parser.text[parser.caret] == '<':
-            tmptag = parser.text[parser.caret+1:match.end(0)-1].lower()
+            tmptag = parser.text[parser.caret+1:match.end(0)-1]
         else:
-            tmptag = parser.text[parser.caret+3:match.end(0)-1].lower()
-        if node.name in AUTO_CLOSE and tmptag in AUTO_CLOSE[node.name]:
+            tmptag = parser.text[parser.caret+3:match.end(0)-1]
+        tmptag = tmptag.lower()
+        if (node.name in AUTO_CLOSE and
+                tmptag in AUTO_CLOSE[node.name]):
             del node.type__
             return parser.copy_pos()
         if node.name in AUTO_CLOSE_FIRST:
@@ -258,7 +266,8 @@ class ElementNP(NodeParser):
                 if isinstance(child, Element):
                     has_element = True
                     break
-            if has_element is False and tmptag in AUTO_CLOSE_FIRST[node.name]:
+            if (has_element is False and
+                    tmptag in AUTO_CLOSE_FIRST[node.name]):
                 del node.type__
                 return parser.copy_pos()
         return None
@@ -347,8 +356,9 @@ class ElementNP(NodeParser):
                     self.msg('E140', pos, [item])
             return val
 
-    #pylint: disable=R0913
-    def handle_id_ref(self, parser, node, prop, prop_index, prop_type):
+    # pylint: disable=R0913
+    def handle_id_ref(
+            self, parser, node, prop, prop_index, prop_type):
         """Handle the ID and Python references. """
         mapping = {
             'id': 'element IDs',
@@ -357,8 +367,9 @@ class ElementNP(NodeParser):
             '@': '#',
         }
         if len(prop) == 1:
+            pos = parser.compute(prop_index)
             self.msg(
-                'E170', parser.compute(prop_index), [mapping[prop_type]]
+                'E170', pos, [mapping[prop_type]]
             )
         elif prop[-1] == mapping[prop[0]]:
             val = prop[1:-1]
@@ -376,14 +387,13 @@ class ElementNP(NodeParser):
 
             #idname .class1 [attref1] @ref
 
-        The first sets the attribute id to idname. If the implied
+        The first sets the attribute id to `idname`. If the implied
         value starts with a period (dot) then that value gets
         appended to the attribute class. If the values are within
         square brackets then the content of the brackets gets
-        appended to an attribute called _alref. The valid If the
-        value starts with @ then its value will be stored in an
-        attribute called _pyref. Notice that the value cannot be
-        empty.
+        appended to an attribute called _alref. If the value starts
+        with @ then it will be stored in an attribute called _pyref.
+        Notice that the value cannot be empty.
 
         There are two extra shortcuts which are derived from # and @.
         The following are equivalent: #id-ref-name@ and
@@ -391,11 +401,16 @@ class ElementNP(NodeParser):
         be "id-ref-name" and that the same name should be used for
         python to store the reference. The second one says to use
         "id-ref-name" for python to store the reference and to use
-        the same name as the id. """
+        the same name as the id.
+        """
         if prop[0] == '@':
-            self.handle_id_ref(parser, node, prop, prop_index, '_pyref')
+            self.handle_id_ref(
+                parser, node, prop, prop_index, '_pyref'
+            )
         elif prop[0] == '#':
-            self.handle_id_ref(parser, node, prop, prop_index, 'id')
+            self.handle_id_ref(
+                parser, node, prop, prop_index, 'id'
+            )
         elif prop == 'id':
             self.msg(
                 'E170', parser.compute(prop_index), ['element IDs']
@@ -408,7 +423,9 @@ class ElementNP(NodeParser):
         elif prop[0] == '[' and prop[-1] == ']':
             val = prop[1:-1].lower()
             if '_alref' in node:
-                node['_alref'].append((parser.compute(prop_index), val))
+                node['_alref'].append(
+                    (parser.compute(prop_index), val)
+                )
             else:
                 node['_alref'] = [(parser.compute(prop_index), val)]
         else:
@@ -447,7 +464,8 @@ class ElementNP(NodeParser):
 
     def get_attribute_list(self, parser, node, start='{', end='}'):
         """Attempts to get the attribute list at the current position
-        where the parser is reading. """
+        where the parser is reading.
+        """
         caret = parser.caret
         if parser.text[caret:caret+1] != start:
             return None
