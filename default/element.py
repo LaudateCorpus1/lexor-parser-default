@@ -93,7 +93,7 @@ class ElementNP(NodeParser):
     the first p tag will be closed.
     """
 
-    def is_element(self, parser):
+    def is_element(self, parser, warn=True):
         """Check to see if the parser's caret is positioned in an
         element and return the index where the opening tag ends and
         the number 1 (if element starts with '<') or 3 (if it starts
@@ -119,7 +119,8 @@ class ElementNP(NodeParser):
             start = parser.text.find('<', caret+1)
             if start != -1 and start < end_index:
                 pos = parser.compute(start)
-                self.msg('E100', parser.pos, [Position(pos)])
+                if warn:
+                    self.msg('E100', parser.pos, [Position(pos)])
                 return None
         else:
             return None
@@ -130,7 +131,7 @@ class ElementNP(NodeParser):
         the tagname, otherwise it returns None.
         """
         caret = parser.caret
-        tmp = self.is_element(parser)
+        tmp = self.is_element(parser, warn=False)
         if tmp is None:
             return None
         shift = tmp[1]
@@ -185,11 +186,11 @@ class ElementNP(NodeParser):
                     parser.update(index+1)
                     return pos
             else:
-                flag = self.is_element(parser)
+                flag = self.is_element(parser, warn=False)
         elif node.type__ == 3:
             if parser.text[caret:caret+3] in ['%%?', '%%!']:
                 return None
-            flag = self.is_element(parser)
+            flag = self.is_element(parser, warn=False)
             if flag:
                 pass
             elif parser.text[caret:caret+2] == '%%':
