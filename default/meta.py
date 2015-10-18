@@ -44,8 +44,9 @@ class MetaNP(NodeParser):
             key = match.group('key').lower().strip()
             b2 = match.group('b2')
             value = match.group('value').strip()
-            node = Element('entry', {'name': key}).set_position(*pos)
-            val_node = RawText('item', value)
+            node = Element('lx:meta-entry', {'name': key})
+            node.set_position(*pos)
+            val_node = RawText('lx:meta-item', value)
             blank = len(b1) + len(key) + len(b2)
             pos = parser.compute(parser.caret + blank)
             val_node.set_position(*pos)
@@ -60,7 +61,7 @@ class MetaNP(NodeParser):
                 match_more = META_MORE_RE.match(line)
                 if match_more:
                     value = match_more.group('value')
-                    val_node = RawText('item', value.strip())
+                    val_node = RawText('lx:meta-item', value.strip())
                     blank = len(match_more.group('blank'))
                     pos = parser.compute(parser.caret + blank)
                     val_node.set_position(*pos)
@@ -93,7 +94,7 @@ class MetaNP(NodeParser):
         entry = self.get_entry(parser, False)
         if entry is None:
             return delimiter
-        node = Element('lexor-meta').set_position(*pos)
+        node = Element('lx:meta').set_position(*pos)
         while entry is not None:
             node.append_child(entry)
             entry = self.get_entry(parser)
