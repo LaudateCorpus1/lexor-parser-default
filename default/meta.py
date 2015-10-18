@@ -1,17 +1,29 @@
 """LEXOR: META NodeParser
 
-Obtains the meta information on a document.
+Obtains the meta information on a document. The meta information
+can only be the started in the first line of the document. This can
+be done by starting with a line which contains a key and a value
+
+    key: value
+
+or a horizontal rule
+
+    ---
+
+See the `HrNP` documentation for more info on how to make a horizontal
+rule. To end the meta information we may finish with an empty line
+or alternatively, a horizontal rule.
 
 """
-
 import re
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Element, RawText
 
 META_RE = re.compile(
-    r'^[ ]{0,3}(?P<key>[A-Za-z0-9_-]+):\s*(?P<value>.*)'
+    r'^(?P<b1>[ ]{0,3})(?P<key>[A-Za-z0-9_-]+)'
+    r'(?P<b2>:\s*)(?P<value>.*)'
 )
-META_MORE_RE = re.compile(r'^[ ]{4,}(?P<value>.*)')
+META_MORE_RE = re.compile(r'^(?P<blank>[ ]{4,})(?P<value>.*)')
 
 
 class MetaNP(NodeParser):
@@ -27,10 +39,16 @@ class MetaNP(NodeParser):
             return None
         match = META_RE.match(line)
         if match:
+            pos = parser.copy_pos()
+            b1 = match.group('b1')
             key = match.group('key').lower().strip()
+            b2 = match.group('b2')
             value = match.group('value').strip()
-            node = Element('entry', {'name': key})
+            node = Element('entry', {'name': key}).set_position(*pos)
             val_node = RawText('item', value)
+            blank = len(b1) + len(key) + len(b2)
+            pos = parser.compute(parser.caret + blank)
+            val_node.set_position(*pos)
             node.append_child(val_node)
             parser.update(index+1)
             search = True
@@ -41,8 +59,11 @@ class MetaNP(NodeParser):
                 line = parser.text[parser.caret:index]
                 match_more = META_MORE_RE.match(line)
                 if match_more:
-                    value = match_more.group('value').strip()
-                    val_node = RawText('item', value)
+                    value = match_more.group('value')
+                    val_node = RawText('item', value.strip())
+                    blank = len(match_more.group('blank'))
+                    pos = parser.compute(parser.caret + blank)
+                    val_node.set_position(*pos)
                     node.append_child(val_node)
                     parser.update(index+1)
                 else:
@@ -56,8 +77,10 @@ class MetaNP(NodeParser):
                     if count > 0:
                         self.msg('E101', parser.pos, [count])
             return node
-        elif warn:
-            self.msg('E100', parser.pos)
+        else:
+            delimiter = parser['HrNP'].make_node()
+            if delimiter is None and warn:
+                self.msg('E100', parser.pos)
         return None
 
     def make_node(self):
@@ -65,10 +88,12 @@ class MetaNP(NodeParser):
         caret = parser.caret
         if caret != 0:
             return None
+        pos = parser.copy_pos()
+        delimiter = parser['HrNP'].make_node()
         entry = self.get_entry(parser, False)
         if entry is None:
-            return None
-        node = Element('lexor-meta')
+            return delimiter
+        node = Element('lexor-meta').set_position(*pos)
         while entry is not None:
             node.append_child(entry)
             entry = self.get_entry(parser)
@@ -85,6 +110,9 @@ MSG = {
 MSG_EXPLANATION = [
     """
     - Meta blocks end when with the encounter of the first blank line.
+
+    - Alternatively, they men end with the encounter of the first
+      horizontal rule.
 
     Okay:
         title:   My Document

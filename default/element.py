@@ -117,6 +117,9 @@ class ElementNP(NodeParser):
             if end_index == -1:
                 return None
             start = parser.text.find('<', caret+1)
+            # TODO: add a default to the style to see if we need to
+            #       perform this check. Since this is no longer HTML
+            #       we should allow the use `<` in attributes.
             if start != -1 and start < end_index:
                 pos = parser.compute(start)
                 if warn:
