@@ -11,7 +11,7 @@ LANG_RE = re.compile(r'''
     (?P<path>(?:/\w+)*[/ ])?        # Zero or 1 path
     (?P<lang>[\w+-]*)               # The language
     ''', re.VERBOSE)
-FENCED = re.compile(r'\n~{3,}[~]+[ ]*(\n|$)')
+FENCED = re.compile(r'~{3,}[~]+[ ]*(\n|$)')
 
 
 class CodeInlineNP(NodeParser):
@@ -171,7 +171,7 @@ class CodeBlockNP(NodeParser):
         """Parse a fenced block code. """
         parser = self.parser
         text = parser.text
-        total = text[match.start()+1:match.end()].count('~')
+        total = text[match.start():match.end()].count('~')
         parser.update(match.end())
         node = Element('codeblock')
 
@@ -199,7 +199,7 @@ class CodeBlockNP(NodeParser):
             parser.update(index+1)
 
         rfenced = re.compile(r'\n~{'+str(total-1)+',}[~]+[ ]*(\n|$)')
-        match = rfenced.search(text, parser.caret)
+        match = rfenced.search(text, parser.caret-1)
         if not match:
             self.msg('E200', parser.pos, [total])
             node.append_child(append+text[parser.caret:])
@@ -211,7 +211,11 @@ class CodeBlockNP(NodeParser):
 
     def make_node(self):
         parser = self.parser
-        match = FENCED.match(parser.text, parser.caret-1)
+        caret = parser.caret
+        if caret > 1 and parser.text[caret-1] != '\n':
+            return None
+
+        match = FENCED.match(parser.text, caret)
         if match:
             return self.get_fenced_block(match)
         text = self.parser.text[parser.caret:parser.caret+4]
