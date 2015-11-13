@@ -8,19 +8,43 @@ the following syntax:
 This means that the content cannot contain the sequence `%%`
 
 """
-
 import re
+import traceback
 from lexor.core.parser import NodeParser
-from lexor.core.elements import ProcessingInstruction, Text
+from lexor.core.elements import (
+    ProcessingInstruction, Text, Element, CData
+)
 
-RE = re.compile('.*?[ \t\n\r\f\v]')
+RE = re.compile('.*?[ \t\n\r\f]')
 
 
 class ProcessingInstructionNP(NodeParser):
     """Parses content enclosed within `<?PITarget` and `?>` or
     `%%?PITarget` and `%%`. Note that the target of the
     `ProcessingInstruction` object that it returns has `?`
-    preappended to it. """
+    prepended to it.
+    """
+
+    # noinspection PyBroadException
+    def assemble_node(self, target, content, pos):
+        """Create the processing instruction and compile it if the
+        target is for python. """
+        node = ProcessingInstruction(target, content)
+        node.set_position(*pos)
+        if target in ['?py', '?python']:
+            try:
+                node.compile_python(self.parser.uri)
+            except BaseException:
+                self.msg('E103', pos)
+                err_node = Element('python_pi_error')
+                err_node.set_position(*pos)
+                err_data = CData(traceback.format_exc())
+                err_data.set_position(pos[0], pos[1]+1+len(target))
+                err_node.append_child(
+                    err_data
+                )
+                return [err_node]
+        return node
 
     def make_node(self):
         """Returns node if the parsers caret is not position at the
@@ -55,29 +79,36 @@ class ProcessingInstructionNP(NodeParser):
             content = parser.text[parser.caret:parser.end]
             parser.update(parser.end)
             return Text(content)
+        start = match.end(0) - 1
+        if parser.text[start] in [' ', '\t']:
+            start += 1
         if shift == 1:
             index = parser.text.find('?>', match.end(0), parser.end)
             if index == -1:
                 self.msg('E101', pos, [target])
-                content = parser.text[match.end(0):parser.end]
+                content = parser.text[start:parser.end]
                 parser.update(parser.end)
-                return ProcessingInstruction(target, content)
+                return self.assemble_node(target, content, pos)
         else:
             index = parser.text.find('%%', match.end(0), parser.end)
             if index == -1:
-                content = parser.text[match.end(0):parser.end]
-                parser.update(parser.end)
                 self.msg('E102', pos, [target])
-                return ProcessingInstruction(target, content)
-        content = parser.text[match.end(0):index]
+                content = parser.text[start:parser.end]
+                parser.update(parser.end)
+                return self.assemble_node(target, content, pos)
+        content = parser.text[start:index]
         parser.update(index+2)
-        return ProcessingInstruction(target, content)
+        return self.assemble_node(target, content, pos)
+
+    def close(self, _):
+        pass
 
 
 MSG = {
     'E100': 'ignoring processing instruction',
     'E101': '`<{0}` was started but `?>` was not found',
     'E102': '`%%{0}` was started but `%%` was not found',
+    'E103': 'errors in python processing instruction',
 }
 MSG_EXPLANATION = [
     """
@@ -85,7 +116,7 @@ MSG_EXPLANATION = [
       enclosed within `<?` and `?>`.
 
     - If there is no space following the target of the processing
-      instruction, that is, if the file ends abrutly, then the
+      instruction, that is, if the file ends abruptly, then the
       processing instruction will be ignored.
 
     Okay: <?php echo '<p>Hello World</p>'; ?>
@@ -95,4 +126,20 @@ MSG_EXPLANATION = [
     E101: <?php echo '<p>Hello World</p>';
     E102: %%?python print '<p>Hello World</p>'
 """,
+    """
+    - Python processing instructions must be valid.
+
+    - Invalid code will be replaced with a "python_pi_error" element
+      containing the traceback to help you fix the errors.
+
+    Okay: <?py print 'hello world' ?>
+
+    E103: <?py print 'hello world ?>
+    E103:
+        <?python
+        for i in xrange(5)
+            print 'hello'
+        ?>
+
+"""
 ]
