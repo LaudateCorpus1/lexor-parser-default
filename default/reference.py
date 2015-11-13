@@ -1,15 +1,14 @@
 """LEXOR: REFERENCE NodeParser
 
 """
-
 import re
 from lexor.util import Position
 from lexor.core.parser import NodeParser
 from lexor.core.elements import Void, Element
 
 RE = re.compile(r'\s+')
-RE_INLINE = re.compile(r'.*?[ \t\n\r\f\v)]')
-RE_NOSPACE = re.compile(r'.*?[ \t\n\r\f\v]')
+RE_INLINE = re.compile(r'.*?[ \t\n\r\f)]')
+RE_NOSPACE = re.compile(r'.*?[ \t\n\r\f]')
 
 
 class ReferenceBlockNP(NodeParser):
@@ -35,10 +34,13 @@ class ReferenceBlockNP(NodeParser):
 
     Returns a node with one of the following names:
 
-        'address_reference'
-        'attribute_reference'
+        'lx:address-reference'
+        'lx:attribute-reference'
 
     """
+
+    def close(self, _):
+        pass
 
     def is_title(self, parser, line_end=None):
         """Return a string enclosed by quotes (single or double) and
@@ -83,10 +85,10 @@ class ReferenceBlockNP(NodeParser):
         ref_begin = index + 1
         if char == '[':
             closing_char = ']'
-            tagname = 'address_reference'
+            tagname = 'lx:address-reference'
         else:
             closing_char = '}'
-            tagname = 'attribute_reference'
+            tagname = 'lx:attribute-reference'
         line_end = parser.text.find('\n', ref_begin)
         if line_end == -1:
             line_end = parser.end
@@ -98,8 +100,8 @@ class ReferenceBlockNP(NodeParser):
             return None
         node = Void(tagname)
         node.line_end = line_end
-        node['_reference_name'] = parser.text[ref_begin:index]
-        node['_pos'] = parser.copy_pos()
+        node['_reference-name'] = parser.text[ref_begin:index]
+        node.set_position(*parser.pos)
         parser.update(index+2)
         parser['EmptyNP'].skip_space(parser)
         return node
@@ -119,7 +121,7 @@ class ReferenceBlockNP(NodeParser):
             end = parser.end + 1
         node['_address'] = parser.text[parser.caret:end-1]
         if node['_address'] == '':
-            self.msg('E101', node['_pos'])
+            self.msg('E101', node.node_position)
         parser.update(end-1)
         parser['EmptyNP'].skip_space(parser)
         tmp = self.is_title(parser)
@@ -227,11 +229,15 @@ class ReferenceInlineNP(NodeParser):
         """Assumes that the parser is positioned at ("""
         end_info = parser.text.find(")", parser.caret+1, parser.end)
         if end_info == -1:
-            self.msg('E103', node['_pos'], [Position(parser.pos)])
+            self.msg(
+                'E103', node.node_position, [Position(parser.pos)]
+            )
             node.name = 'failed_%s' % node.name
             return
         parser.update(parser.caret+1)
-        match = RE_INLINE.search(parser.text, parser.caret, end_info+1)
+        match = RE_INLINE.search(
+            parser.text, parser.caret, end_info + 1
+        )
         if match:
             url = parser.text[parser.caret:match.end(0)-1]
             if node.name == 'img':
@@ -240,7 +246,9 @@ class ReferenceInlineNP(NodeParser):
                 node['href'] = url
             parser.update(match.end(0))
             parser['EmptyNP'].skip_space(parser)
-            tmp = parser['ReferenceBlockNP'].is_title(parser, end_info)
+            tmp = parser['ReferenceBlockNP'].is_title(
+                parser, end_info
+            )
             if tmp:
                 node['title'] = tmp[0]
                 parser.update(tmp[1])
@@ -249,7 +257,6 @@ class ReferenceInlineNP(NodeParser):
                     parser, node, end_info, 0
                 )
             parser.update(end_info+1)
-        del node['_pos']
 
     def make_node(self):
         parser = self.parser
@@ -269,9 +276,9 @@ class ReferenceInlineNP(NodeParser):
             return None
 
         if tagtype == 'img':
-            node = Void('reference')
+            node = Void('lx:reference')
             node['alt'] = parser.text[ref_begin:ref_end]
-            node['_pos'] = parser.copy_pos()
+            node.set_position(*parser.pos)
             parser.update(ref_end+1)
             char = parser.text[ref_end+1:ref_end+2]
             if char == '(':
@@ -283,9 +290,8 @@ class ReferenceInlineNP(NodeParser):
                 parser.update(ref_end+1)
             parser['ElementNP'].get_attribute_list(parser, node)
             return node
-        node = Element('reference')
-        node.pos = parser.copy_pos()
-        node['_pos'] = parser.copy_pos()
+        node = Element('lx:reference')
+        node.set_position(*parser.pos)
         node.ref_end = ref_end
         parser.update(parser.caret+1)
         return node
@@ -337,7 +343,7 @@ MSG_EXPLANATION = [
       is the case you may not write text right after it.
 
     - If you did not meant to write a title then leave an empty line
-    after the reference to get rid of message E102.
+      after the reference to get rid of message E102.
 
     Okay:
         [math_url]: http://www.mathematics.uh.edu/
@@ -345,7 +351,7 @@ MSG_EXPLANATION = [
 
     E102:
         [math_url]: http://www.mathematics.uh.edu/
-                    "UH Math Website". No content allowed in this line.
+                    "UH Math Website". No text allowed in this line.
 
 """, """
     - An inline reference was detected due to the opening of '(' but

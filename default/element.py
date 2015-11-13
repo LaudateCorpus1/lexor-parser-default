@@ -27,7 +27,9 @@ VOID_ELEMENT = (
     'bibliography',
 )
 RAWTEXT_ELEMENT = (
-    'script', 'style', 'textarea', 'title', 'undef', 'usepackage',
+    'script', 'style', 'textarea', 'title',
+    'undef', 'usepackage',
+    'lx:meta-item',
 )
 AUTO_CLOSE = {
     'p': [
