@@ -73,7 +73,7 @@ class ParagraphNP(NodeParser):
                     parser.text[caret+1:caret+8] == '</list>' or (
                     node.index == 0 and
                     parser.text[caret+1:caret+2] in '^+*')):
-                node['lx-remove-wrap'] = 'true'
+                node['lx:remove-wrap'] = 'true'
                 return parser.copy_pos()
         return None
 
