@@ -4,8 +4,8 @@ This parser attempts to combine the best features of Markdown and
 LaTeX. This is all in taste and preferences of the author.
 
 """
-
 from lexor import init, load_aux
+
 
 DEFAULTS = {
     'inline': 'off',
@@ -42,6 +42,7 @@ REPOSITORY = [
     MOD['empty'].EmptyNP,
     MOD['entity'].EntityNP,
     MOD['entity'].BreakNP,
+    MOD['eval'].EvalNP,
     MOD['header'].AtxHeaderNP,
     MOD['header'].SetextHeaderNP,
     MOD['hr'].HrNP,
@@ -83,6 +84,7 @@ MAPPING = {
             'DocumentTypeNP',
             'CommentNP',
             'ProcessingInstructionNP',
+            'EvalNP',
             'EntityNP',
         ]
     ),
@@ -101,6 +103,7 @@ MAPPING = {
             'DocumentTypeNP',
             'CommentNP',
             'ProcessingInstructionNP',
+            'EvalNP',
             'ParagraphNP',
             'ElementNP',
         ]

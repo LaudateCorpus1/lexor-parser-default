@@ -31,9 +31,10 @@ class ProcessingInstructionNP(NodeParser):
         target is for python. """
         node = ProcessingInstruction(target, content)
         node.set_position(*pos)
-        if target in ['?py', '?python']:
+        if target in ['?py', '?python', '?py_eval']:
             try:
-                node.compile_python(self.parser.uri)
+                mode = 'eval' if target == '?py_eval' else 'exec'
+                node.compile_python(self.parser.uri, mode)
             except BaseException:
                 self.msg('E103', pos)
                 err_node = Element('python_pi_error')
@@ -47,7 +48,7 @@ class ProcessingInstructionNP(NodeParser):
         return node
 
     def make_node(self):
-        """Returns node if the parsers caret is not position at the
+        """Returns None if the parsers caret is not positioned at the
         sequence `'<?'` or `'%%?'`. If it is found it returns a
         `ProcessingInstruction` node containing all the text found
         till the sequence `'?>'` or `'%%'` is found. If it is not
